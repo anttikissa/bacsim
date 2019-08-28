@@ -11,6 +11,12 @@ let constants = {
 	sex: 'male',
 }
 
+// constants = {
+// 	weight: 60,
+// 	height: 160,
+// 	sex: 'female',
+// }
+
 function computeWidmark(victim) {
 	let result
 
@@ -125,6 +131,8 @@ function simulate() {
 	let victim = constants
 	let widmarkFactor = computeWidmark(victim)
 
+	log('Widmark is', widmarkFactor.toFixed(4))
+
 	let inputData = convertSetToArray(dataPoints)
 	inputData.sort((a, b) => {
 		return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0
@@ -164,7 +172,7 @@ function simulate() {
 		}
 
 		if (countdown) {
-			if (countdown++ > 100) {
+			if (countdown++ > 30) {
 				break
 			}
 		}
@@ -176,13 +184,21 @@ function simulate() {
 			in: intake.toFixed(4),
 			sto: stomachAlcoholContent.toFixed(4),
 			blo: bacAbsolute.toFixed(4),
-			bac: bacRelative.toFixed(4)
+			bac: bacRelative.toFixed(4),
 		})
 	}
 }
 
 // 4cl shot jaloviina - roughly 12 grams of alcohol
 addDrink('10:00', 4, 38, 1)
+addDrink('10:30', 4, 38, 1)
+addDrink('11:00', 4, 38, 1)
+addDrink('11:30', 4, 38, 1)
+
+// addDrink('10:00', 4.5, 40, 1)
+// addDrink('10:10', 4.5, 40, 1)
+// addDrink('10:20', 4.5, 40, 1)
+// addDrink('10:30', 4.5, 40, 1)
 
 // // 12cl 12.5% abv wine
 // addDrink('10:05', 12, 12.5, 15)
