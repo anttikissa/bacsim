@@ -43,63 +43,73 @@ function addMinutes(hhmm, minutes) {
 
 let dataPoints = new Map()
 
-function getData() {
-	let keys = [...dataPoints.keys()]
+// Return data in array format
+function convertSetToArray(set) {
+	let keys = [...set.keys()]
 
 	return keys.map(key => [
 		key,
-		{
-			n: dataPoints.get(key).n.toFixed(4)
-		}
+		set.get(key)
 	])
 }
 
-function addData(time, n) {
+function addAlcoholIntake(time, grams) {
 	let obj = dataPoints.get(time)
 	if (!obj) {
 		obj = {}
 		dataPoints.set(time, obj)
 	}
 
-	if (typeof obj.n === 'number') {
-		obj.n += n
+	if (typeof obj.alcoholIntake === 'number') {
+		obj.alcoholIntake += grams
 	} else {
-		obj.n = n
+		obj.alcoholIntake = grams
 	}
 }
-
-addData('12:34', 5)
-addData('12:35', 5)
-addData('12:35', 5)
-addData('12:36', 5)
-addData('12:37', 5)
-addData('12:38', 5)
-addData('12:39', 5)
-
-addData('12:34', 5)
-addData('12:35', 6)
-addData('12:35', 7)
-
-addData('12:40', 0)
-addData('12:40', 1)
 
 function roundTo4(n) {
 	return Math.round(n * 10000) * 0.0001
 }
 
 function addDrink(time, cl, abv, minutes = 10) {
-	let alcohol = cl * abv / 100
-	let alcoholPerMinute = roundTo4(alcohol / minutes)
+	let alcoholDensityGramsPerMl = 0.7893
+	let ml = cl * 10
+	let alcoholVolumeMl = ml * abv / 100
+	let alcoholGrams = alcoholVolumeMl * alcoholDensityGramsPerMl
+	let alcoholPerMinute = roundTo4(alcoholGrams / minutes)
 	for (let i = 0; i < minutes; i++) {
-		addData(addMinutes(time, i), alcoholPerMinute)
+		addAlcoholIntake(addMinutes(time, i), alcoholPerMinute)
 	}
 }
 
-addDrink('10:00', 33.3, 4.7, 10)
-addDrink('10:05', 12, 13, 20)
+// 4cl shot jaloviina
+addDrink('10:00', 4, 38, 1)
 
-// for (let i = 0; i < 100; i++) {
-// 	log(addMinutes('23:34', i))
-// }
+// 12cl 12.5% abv wine
+addDrink('10:05', 12, 12.5, 15)
 
-log(getData())
+// 33cl 4.6% beer
+addDrink('10:10', 33.3, 4.6, 15)
+
+function simulate() {
+	let inputData = convertSetToArray(dataPoints)
+
+	inputData.sort((a, b) => {
+		return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0
+	})
+
+	let firstTime = inputData[0][0]
+	let lastTime = inputData[inputData.length - 1][0]
+
+	for (let i = 0; addMinutes(firstTime, i) !== lastTime; i++) {
+		let time = addMinutes(firstTime, i)
+		let input = dataPoints.get(time)
+		let intake = input ? input.alcoholIntake : 0
+		log('step', i, 'time', time, { intake })
+	}
+}
+
+simulate()
+
+
+
