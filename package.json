@@ -1,0 +1,7 @@
+{
+  "name": "bacsim",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Antti Kissaniemi <antti.kissaniemi@gmail.com>",
+  "license": "MIT"
+}
