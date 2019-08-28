@@ -3,6 +3,44 @@ let log = console.log
 
 log(x)
 
+// time
+
+function parseTime(hhmm) {
+	let match = hhmm.match(/^(\d+):(\d+)$/)
+	if (!match) {
+		throw new Error('not a time: ' + hhmm)
+	}
+
+	let [ _, hh, mm ] = match
+	return [ hh, mm ]
+
+}
+
+function pad2(n) {
+	n = String(n)
+	while (n.length < 2) {
+		n = '0' + n
+	}
+	return n
+}
+
+function unparseTime(hh, mm) {
+	return `${pad2(hh)}:${pad2(mm)}`
+}
+
+function addMinutes(hhmm, minutes) {
+	let [hh, mm] = parseTime(hhmm)
+	hh = Number(hh)
+	mm = Number(mm)
+	mm += minutes
+	while (mm >= 60) {
+		hh++
+		mm -= 60
+	}
+	return unparseTime(hh, mm)
+
+}
+
 let dataPoints = new Map()
 
 function getData() {
@@ -49,13 +87,19 @@ function roundTo4(n) {
 	return Math.round(n * 10000) * 0.0001
 }
 
-function addDrink(time, cl, abv, minutes = 1) {
+function addDrink(time, cl, abv, minutes = 10) {
 	let alcohol = cl * abv / 100
 	let alcoholPerMinute = roundTo4(alcohol / minutes)
-	addData(time, alcoholPerMinute)
+	for (let i = 0; i < minutes; i++) {
+		addData(addMinutes(time, i), alcoholPerMinute)
+	}
 }
 
-addDrink('10:00', 33.3, 4.7)
-addDrink('10:05', 12, 13)
+addDrink('10:00', 33.3, 4.7, 10)
+addDrink('10:05', 12, 13, 20)
+
+// for (let i = 0; i < 100; i++) {
+// 	log(addMinutes('23:34', i))
+// }
 
 log(getData())
