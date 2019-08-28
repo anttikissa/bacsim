@@ -9,6 +9,8 @@ let constants = {
 	weight: 87,
 	height: 173,
 	sex: 'male',
+	// in promilles per hour
+	eliminationRatePerHour: 0.18
 }
 
 // constants = {
@@ -154,26 +156,42 @@ function simulate() {
 	let alcoholHalfLifeInStomach = 8
 
 	function simulateStep(intake) {
-		let absorptionRatio = 1 - Math.pow(0.5, 1 / alcoholHalfLifeInStomach)
+		// 1. Simulate elimination (from blood) by changing bacRelative
+		// and backporting results to bacAbsolute
+		let bacRatio = 1
+		if (bacAbsolute > 0 && bacRelative > 0) {
+			bacRatio = bacAbsolute / bacRelative
+		}
+		bacRelative = bacRelative - victim.eliminationRatePerHour / 60
+		if (bacRelative < 0) {
+			bacRelative = 0
+		}
+		bacAbsolute = bacRatio * bacRelative
 
+		// 2. Simulate absorption (from stomach to blood)
+		let absorptionRatio = 1 - Math.pow(0.5, 1 / alcoholHalfLifeInStomach)
 		let absorption = absorptionRatio * stomachAlcoholContent
 		stomachAlcoholContent -= absorption
 		bacAbsolute += absorption
 
 		bacRelative = bacAbsolute / (widmarkFactor * victim.weight)
+
+		// 3. Simulate consumption (alcohol entering stomach)
 		stomachAlcoholContent += intake
 	}
 
 	let countdown = 0
 
-	for (let i = 0; ; i++) {
+	for (let i = 0;; i++) {
 		if (addMinutes(firstTime, i) === lastTime) {
 			countdown++
 		}
 
 		if (countdown) {
 			if (countdown++ > 30) {
-				break
+				if (bacRelative < 0.001) {
+					break
+				}
 			}
 		}
 		let time = addMinutes(firstTime, i)
@@ -191,9 +209,9 @@ function simulate() {
 
 // 4cl shot jaloviina - roughly 12 grams of alcohol
 addDrink('10:00', 4, 38, 1)
-addDrink('10:30', 4, 38, 1)
-addDrink('11:00', 4, 38, 1)
-addDrink('11:30', 4, 38, 1)
+// addDrink('10:10', 4, 38, 1)
+// addDrink('10:10', 4, 38, 1)
+// addDrink('10:10', 4, 38, 1)
 
 // addDrink('10:00', 4.5, 40, 1)
 // addDrink('10:10', 4.5, 40, 1)
