@@ -11,9 +11,8 @@ function parseTime(hhmm) {
 		throw new Error('not a time: ' + hhmm)
 	}
 
-	let [ _, hh, mm ] = match
-	return [ hh, mm ]
-
+	let [_, hh, mm] = match
+	return [hh, mm]
 }
 
 function pad2(n) {
@@ -38,7 +37,6 @@ function addMinutes(hhmm, minutes) {
 		mm -= 60
 	}
 	return unparseTime(hh, mm)
-
 }
 
 let dataPoints = new Map()
@@ -47,10 +45,7 @@ let dataPoints = new Map()
 function convertSetToArray(set) {
 	let keys = [...set.keys()]
 
-	return keys.map(key => [
-		key,
-		set.get(key)
-	])
+	return keys.map(key => [key, set.get(key)])
 }
 
 function addAlcoholIntake(time, grams) {
@@ -67,16 +62,17 @@ function addAlcoholIntake(time, grams) {
 	}
 }
 
-function roundTo4(n) {
-	return Math.round(n * 10000) * 0.0001
-}
+// function roundTo(n, decimals) {
+// 	let multiplier = Math.pow(10, decimals)
+// 	return Math.round(n * multiplier) / multiplier
+// }
 
 function addDrink(time, cl, abv, minutes = 10) {
 	let alcoholDensityGramsPerMl = 0.7893
 	let ml = cl * 10
-	let alcoholVolumeMl = ml * abv / 100
+	let alcoholVolumeMl = (ml * abv) / 100
 	let alcoholGrams = alcoholVolumeMl * alcoholDensityGramsPerMl
-	let alcoholPerMinute = roundTo4(alcoholGrams / minutes)
+	let alcoholPerMinute = alcoholGrams / minutes
 	for (let i = 0; i < minutes; i++) {
 		addAlcoholIntake(addMinutes(time, i), alcoholPerMinute)
 	}
@@ -101,15 +97,22 @@ function simulate() {
 	let firstTime = inputData[0][0]
 	let lastTime = inputData[inputData.length - 1][0]
 
+	let stomachAlcoholContent = 0
+
+	function simulateStep(intake) {
+		stomachAlcoholContent += intake
+	}
+
 	for (let i = 0; addMinutes(firstTime, i) !== lastTime; i++) {
 		let time = addMinutes(firstTime, i)
 		let input = dataPoints.get(time)
 		let intake = input ? input.alcoholIntake : 0
-		log('step', i, 'time', time, { intake })
+		simulateStep(intake)
+		log('step', i, 'time', time, {
+			intake: intake.toFixed(4),
+			stomach: stomachAlcoholContent.toFixed(4),
+		})
 	}
 }
 
 simulate()
-
-
-
