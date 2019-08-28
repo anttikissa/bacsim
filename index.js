@@ -5,6 +5,49 @@ let log = console.log
 
 // time
 
+let constants = {
+	weight: 87,
+	height: 173,
+	sex: 'male',
+}
+
+function computeWidmark(victim) {
+	let result
+
+	if (!victim.weight || !victim.height) {
+		throw new Error('victim must have weight & height')
+	}
+
+	if (victim.sex === 'male') {
+		result = 0.32 - 0.0048 * victim.weight + 0.0046 * victim.height
+		if (result < 0.6) {
+			result = 0.6
+		}
+		if (result > 0.87) {
+			result = 0.87
+		}
+		return result
+	}
+
+	if (victim.sex === 'female') {
+		result = 0.31 - 0.0064 * victim.weight + 0.0045 * victim.height
+		if (result < 0.44) {
+			result = 0.44
+		}
+		if (result > 0.8) {
+			result = 0.8
+		}
+		return result
+	}
+
+	// Unknown sex? Use the average!
+	return (
+		0.5 *
+		(computeWidmark({ ...victim, sex: 'male' }) +
+			computeWidmark({ ...victim, sex: 'female' }))
+	)
+}
+
 function parseTime(hhmm) {
 	let match = hhmm.match(/^(\d+):(\d+)$/)
 	if (!match) {
@@ -78,10 +121,11 @@ function addDrink(time, cl, abv, minutes = 10) {
 	}
 }
 
-
 function simulate() {
-	let inputData = convertSetToArray(dataPoints)
+	let victim = constants
+	let widmarkFactor = computeWidmark(victim)
 
+	let inputData = convertSetToArray(dataPoints)
 	inputData.sort((a, b) => {
 		return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0
 	})
@@ -89,8 +133,14 @@ function simulate() {
 	let firstTime = inputData[0][0]
 	let lastTime = inputData[inputData.length - 1][0]
 
+	// In grams
 	let stomachAlcoholContent = 0
-	let bloodAlcoholContent = 0
+	// In grams
+	let bacAbsolute = 0
+	// As parts of 1/1000 (promilles) relative to the weight
+	// Expressed in promilles since the formula used to calculate this divides
+	// a g value by a kg value.
+	let bacRelative = 0
 
 	// Steps, i.e. minutes
 	let alcoholHalfLifeInStomach = 8
@@ -100,14 +150,15 @@ function simulate() {
 
 		let absorption = absorptionRatio * stomachAlcoholContent
 		stomachAlcoholContent -= absorption
-		bloodAlcoholContent += absorption
+		bacAbsolute += absorption
 
+		bacRelative = bacAbsolute / (widmarkFactor * victim.weight)
 		stomachAlcoholContent += intake
 	}
 
 	let countdown = 0
 
-	for (let i = 0;; i++) {
+	for (let i = 0; ; i++) {
 		if (addMinutes(firstTime, i) === lastTime) {
 			countdown++
 		}
@@ -122,9 +173,10 @@ function simulate() {
 		let intake = input ? input.alcoholIntake : 0
 		simulateStep(intake)
 		log(time, {
-			intake: intake.toFixed(4),
-			stomach: stomachAlcoholContent.toFixed(4),
-			blood: bloodAlcoholContent.toFixed(4)
+			in: intake.toFixed(4),
+			sto: stomachAlcoholContent.toFixed(4),
+			blo: bacAbsolute.toFixed(4),
+			bac: bacRelative.toFixed(4)
 		})
 	}
 }
@@ -139,4 +191,3 @@ addDrink('10:00', 4, 38, 1)
 // addDrink('10:10', 33.3, 4.6, 15)
 
 simulate()
-
