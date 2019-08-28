@@ -7,7 +7,13 @@ let dataPoints = new Map()
 
 function getData() {
 	let keys = [...dataPoints.keys()]
-	log('keys', keys)
+
+	return keys.map(key => [
+		key,
+		{
+			n: dataPoints.get(key).n.toFixed(4)
+		}
+	])
 }
 
 function addData(time, n) {
@@ -38,5 +44,18 @@ addData('12:35', 7)
 
 addData('12:40', 0)
 addData('12:40', 1)
+
+function roundTo4(n) {
+	return Math.round(n * 10000) * 0.0001
+}
+
+function addDrink(time, cl, abv, minutes = 1) {
+	let alcohol = cl * abv / 100
+	let alcoholPerMinute = roundTo4(alcohol / minutes)
+	addData(time, alcoholPerMinute)
+}
+
+addDrink('10:00', 33.3, 4.7)
+addDrink('10:05', 12, 13)
 
 log(getData())
