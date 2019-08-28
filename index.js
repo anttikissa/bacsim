@@ -1,7 +1,7 @@
-let x = 1
-let log = console.log
+// Documentation:
+// http://www.sumsar.net/blog/2014/07/estimate-your-bac-using-drinkr/
 
-log(x)
+let log = console.log
 
 // time
 
@@ -78,14 +78,6 @@ function addDrink(time, cl, abv, minutes = 10) {
 	}
 }
 
-// 4cl shot jaloviina
-addDrink('10:00', 4, 38, 1)
-
-// 12cl 12.5% abv wine
-addDrink('10:05', 12, 12.5, 15)
-
-// 33cl 4.6% beer
-addDrink('10:10', 33.3, 4.6, 15)
 
 function simulate() {
 	let inputData = convertSetToArray(dataPoints)
@@ -101,9 +93,22 @@ function simulate() {
 
 	function simulateStep(intake) {
 		stomachAlcoholContent += intake
+		// In steps, i.e. minutes
+		// let alcoholHalfLife = 8
 	}
 
-	for (let i = 0; addMinutes(firstTime, i) !== lastTime; i++) {
+	let countdown = 0
+
+	for (let i = 0;; i++) {
+		if (addMinutes(firstTime, i) === lastTime) {
+			countdown++
+		}
+
+		if (countdown) {
+			if (countdown++ > 10) {
+				break
+			}
+		}
 		let time = addMinutes(firstTime, i)
 		let input = dataPoints.get(time)
 		let intake = input ? input.alcoholIntake : 0
@@ -115,4 +120,14 @@ function simulate() {
 	}
 }
 
+// 4cl shot jaloviina - roughly 12 grams of alcohol
+addDrink('10:00', 4, 38, 1)
+
+// // 12cl 12.5% abv wine
+// addDrink('10:05', 12, 12.5, 15)
+//
+// // 33cl 4.6% beer
+// addDrink('10:10', 33.3, 4.6, 15)
+
 simulate()
+
