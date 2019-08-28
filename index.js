@@ -90,11 +90,19 @@ function simulate() {
 	let lastTime = inputData[inputData.length - 1][0]
 
 	let stomachAlcoholContent = 0
+	let bloodAlcoholContent = 0
+
+	// Steps, i.e. minutes
+	let alcoholHalfLifeInStomach = 8
 
 	function simulateStep(intake) {
+		let absorptionRatio = 1 - Math.pow(0.5, 1 / alcoholHalfLifeInStomach)
+
+		let absorption = absorptionRatio * stomachAlcoholContent
+		stomachAlcoholContent -= absorption
+		bloodAlcoholContent += absorption
+
 		stomachAlcoholContent += intake
-		// In steps, i.e. minutes
-		// let alcoholHalfLife = 8
 	}
 
 	let countdown = 0
@@ -105,7 +113,7 @@ function simulate() {
 		}
 
 		if (countdown) {
-			if (countdown++ > 10) {
+			if (countdown++ > 100) {
 				break
 			}
 		}
@@ -113,9 +121,10 @@ function simulate() {
 		let input = dataPoints.get(time)
 		let intake = input ? input.alcoholIntake : 0
 		simulateStep(intake)
-		log('step', i, 'time', time, {
+		log(time, {
 			intake: intake.toFixed(4),
 			stomach: stomachAlcoholContent.toFixed(4),
+			blood: bloodAlcoholContent.toFixed(4)
 		})
 	}
 }
