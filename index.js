@@ -10,14 +10,15 @@ let constants = {
 	height: 173,
 	sex: 'male',
 	// in promilles per hour
-	eliminationRatePerHour: 0.18
+	eliminationRatePerHour: 0.15
 }
 
-// constants = {
-// 	weight: 60,
-// 	height: 160,
-// 	sex: 'female',
-// }
+constants = {
+	weight: 60,
+	height: 160,
+	sex: 'female',
+	eliminationRatePerHour: 0.15
+}
 
 function computeWidmark(victim) {
 	let result
@@ -133,7 +134,7 @@ function simulate() {
 	let victim = constants
 	let widmarkFactor = computeWidmark(victim)
 
-	log('Widmark is', widmarkFactor.toFixed(4))
+//	log('Widmark is', widmarkFactor.toFixed(4))
 
 	let inputData = convertSetToArray(dataPoints)
 	inputData.sort((a, b) => {
@@ -198,12 +199,15 @@ function simulate() {
 		let input = dataPoints.get(time)
 		let intake = input ? input.alcoholIntake : 0
 		simulateStep(intake)
-		log(time, {
-			in: intake.toFixed(4),
-			sto: stomachAlcoholContent.toFixed(4),
-			blo: bacAbsolute.toFixed(4),
-			bac: bacRelative.toFixed(4),
-		})
+
+//		log(time, {
+//			in: intake.toFixed(4),
+//			sto: stomachAlcoholContent.toFixed(4),
+//			blo: bacAbsolute.toFixed(4),
+//			bac: bacRelative.toFixed(4),
+//		})
+
+		log(time + '\t' + intake.toFixed(4) + '\t' + bacRelative.toFixed(4))
 	}
 }
 
@@ -231,7 +235,8 @@ function simulate() {
 // addDrink('10:10', 33.3, 4.6, 15)
 
 function doit(time) {
-	addDrink(time, 33.3, 4.7, 10)
+	//addDrink(time, 33.3, 4.7, 10)
+	addDrink(time, 33.3, 2.8, 10)
 }
 
 // addDrink('10:00', 33.3, 2.8, 10)
