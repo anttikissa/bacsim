@@ -208,7 +208,7 @@ function simulate() {
 }
 
 // 4cl shot jaloviina - roughly 12 grams of alcohol
-addDrink('10:00', 4, 38, 1)
+// addDrink('10:00', 4, 38, 1)
 // addDrink('10:10', 4, 38, 1)
 // addDrink('10:10', 4, 38, 1)
 // addDrink('10:10', 4, 38, 1)
@@ -218,10 +218,36 @@ addDrink('10:00', 4, 38, 1)
 // addDrink('10:20', 4.5, 40, 1)
 // addDrink('10:30', 4.5, 40, 1)
 
+// addDrink('10:00', 33.3, 2.8, 10)
+// addDrink('10:30', 33.3, 2.8, 10)
+// addDrink('11:00', 33.3, 2.8, 10)
+// addDrink('11:30', 33.3, 2.8, 10)
+// addDrink('12:00', 33.3, 2.8, 10)
+
 // // 12cl 12.5% abv wine
 // addDrink('10:05', 12, 12.5, 15)
 //
 // // 33cl 4.6% beer
 // addDrink('10:10', 33.3, 4.6, 15)
+
+function doit(time) {
+	addDrink(time, 33.3, 4.7, 10)
+}
+
+// addDrink('10:00', 33.3, 2.8, 10)
+
+doit('11:00')
+doit('11:45')
+doit('12:30')
+doit('14:00')
+doit('15:00')
+doit('15:45')
+doit('16:45')
+doit('17:30')
+doit('18:45')
+doit('19:30')
+doit('20:15')
+doit('21:15')
+doit('22:00')
 
 simulate()
