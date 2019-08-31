@@ -13,6 +13,21 @@ let constants = {
 	eliminationRatePerHour: 0.15
 }
 
+export function setParams(params) {
+	if (params.weight) {
+		constants.weight = Number(params.weight)
+	}
+	if (params.height) {
+		constants.height = Number(params.height)
+	}
+	if (params.sex) {
+		constants.sex = String(params.sex).toLowerCase().startsWith('m') ? 'male' : 'female'
+	}
+	if (params.elim) {
+		constants.eliminationRatePerHour = Number(params.elim)
+	}
+}
+
 //constants = {
 //	weight: 60,
 //	height: 160,

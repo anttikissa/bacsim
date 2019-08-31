@@ -7,14 +7,25 @@
 			<div v-if="warning" class="warning">
 				?
 			</div>
+
+			<a href="Params" @click.prevent="page = 'params'">Params</a>
 			<a href="Input" @click.prevent="page = 'input'">Input</a>
 			<a href="Output" @click.prevent="page = 'output'">Output</a>
+
 			<div class="abv">
 				{{ abv }}
 			</div>
 		</div>
 
 		<div class="page">
+			<div v-if="page === 'params'" class="params">
+				<label>
+					Parameters
+				</label>
+				<textarea v-model="params">
+				</textarea>
+			</div>
+
 			<div v-if="page === 'input'" class="input">
 				<label>
 					Time CL ABV
@@ -37,9 +48,7 @@ import Vue from 'vue'
 import {
 	reset, addDrink, simulate,
 	parseTime,
-	unparseTime
-
-
+	unparseTime, setParams
 } from './bac'
 
 let log = console.log
@@ -47,6 +56,18 @@ let log = console.log
 export default Vue.extend({
 
 	mounted() {
+		let params = window.localStorage.getItem('bacParams')
+		if (typeof params === 'string') {
+			this.params = params
+		} else {
+			this.params = [
+				'weight = 87',
+				'height = 173',
+				'sex = m',
+				'elim = 0.15'
+			].join('\n')
+		}
+
 		let input = window.localStorage.getItem('bacInput')
 		if (typeof input === 'string') {
 			this.input = input
@@ -72,25 +93,57 @@ export default Vue.extend({
 	data() {
 		return {
 			page: 'input',
+			params: '',
 			input: ''
 		}
 	},
 
 	watch: {
-		simulationResults: function({ result, error, warning }) {
-			if (!error && !warning) {
-				window.localStorage.setItem('bacInput', this.input)
+		params: function(data) {
+			if (data === 'reset') {
+				window.localStorage.removeItem('bacParams')
+				window.location.reload()
 			}
 		},
+		parsedParams: function(data) {
+			if (data) {
+				window.localStorage.setItem('bacParams', this.params)
+			}
+		},
+
 		input: function(data) {
 			if (data === 'reset') {
 				window.localStorage.removeItem('bacInput')
 				window.location.reload()
 			}
-		}
+		},
+		simulationResults: function({ result, error, warning }) {
+			if (!error && !warning) {
+				window.localStorage.setItem('bacInput', this.input)
+			}
+		},
+
 	},
 
 	computed: {
+		parsedParams() {
+			let lines = this.params.split('\n').filter(Boolean)
+
+			let result = {}
+
+			for (let line of lines) {
+				let parts = line.split(/\s*=\s*/)
+				if (parts.length !== 2) {
+					return null
+				}
+
+				let [key, value] = parts
+				result[key] = value
+			}
+
+			return result
+		},
+
 		abv() {
 			let now = new Date()
 
@@ -126,6 +179,8 @@ export default Vue.extend({
 		simulationResults() {
 			reset()
 
+			setParams(this.parsedParams)
+
 			let warning = false
 			let error = false
 
@@ -152,10 +207,19 @@ export default Vue.extend({
 			} catch (err) {
 				log('Got err', err)
 				error = true
-				return []
+				return { result: [], warning, error }
 			}
 
-			return { result: simulate(), warning, error }
+			let result = []
+			try {
+				result = simulate()
+			} catch (err) {
+				log('Simulation failed', err)
+				error = true
+			}
+
+			log('!!! ERR', error)
+			return { result, warning, error }
 		},
 
 		output() {
@@ -242,12 +306,28 @@ export default Vue.extend({
 		right: 10px
 		top: 10px
 		height: 30px
-		/*width: 30px*/
 		color: black
 	}
 }
 
 .page {
+	.params {
+		height: 100%
+		label {
+			font-family: -apple-system, sans-serif
+			height: 24px
+			line-height: 24px
+		}
+		textarea {
+			font-family: -apple-system, Monaco, monospace
+			font-size: 40px
+			width: 100%
+			height: calc(100% - 10px - 24px)
+
+			outline: none;
+		}
+	}
+
 	.input {
 		height: 100%
 		label {
