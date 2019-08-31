@@ -62,13 +62,12 @@ export default Vue.extend({
 				'20:15 33.3 4.7',
 				'21:15 33.3 4.7',
 				'22:00 33.3 4.7',
-			].join('\n'),
-			error: false
+			].join('\n')
 		}
 	},
 
 	computed: {
-		abv(...args) {
+		abv() {
 			let now = new Date()
 
 			let hhmm = unparseTime(now.getHours(), now.getMinutes())
@@ -82,7 +81,7 @@ export default Vue.extend({
 			}
 			let result
 
-			for (let simulationResult of this.simulationResults) {
+			for (let simulationResult of this.simulationResults.result) {
 				let normalizedTime = normalizeTime(simulationResult.time)
 				if (normalizedTime === hhmm) {
 					result = simulationResult.bacRelative.toFixed(3)
@@ -91,11 +90,20 @@ export default Vue.extend({
 
 			return result || 0
 		},
+
+		error() {
+			return this.simulationResults.error
+		},
+
+		warning() {
+			return this.simulationResults.warning
+		},
+
 		simulationResults() {
 			reset()
 
-			this.warning = false
-			this.error = false
+			let warning = false
+			let error = false
 
 			let lines = this.input.split('\n').filter(Boolean)
 
@@ -103,7 +111,7 @@ export default Vue.extend({
 				for (let line of lines) {
 					let [ time, cl, abv, minutes ] = line.split(' ')
 					if (!time || !cl || !abv) {
-						this.warning = true
+						warning = true
 						continue
 					}
 
@@ -119,13 +127,11 @@ export default Vue.extend({
 				}
 			} catch (err) {
 				log('Got err', err)
-				this.error = true
+				error = true
 				return []
 			}
 
-			let result = simulate()
-			// this.error = false
-			return result
+			return { result: simulate(), warning, error }
 		},
 
 		output() {
