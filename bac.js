@@ -57,7 +57,7 @@ function computeWidmark(victim) {
 	)
 }
 
-function parseTime(hhmm) {
+export function parseTime(hhmm) {
 	let match = hhmm.match(/^(\d+):(\d+)$/)
 	if (!match) {
 		throw new Error('not a time: ' + hhmm)
@@ -67,7 +67,7 @@ function parseTime(hhmm) {
 	return [hh, mm]
 }
 
-function pad2(n) {
+export function pad2(n) {
 	n = String(n)
 	while (n.length < 2) {
 		n = '0' + n
@@ -75,7 +75,7 @@ function pad2(n) {
 	return n
 }
 
-function unparseTime(hh, mm) {
+export function unparseTime(hh, mm) {
 	return `${pad2(hh)}:${pad2(mm)}`
 }
 
@@ -93,11 +93,29 @@ function addMinutes(hhmm, minutes) {
 
 let dataPoints = new Map()
 
+export function reset() {
+	dataPoints = new Map()
+}
+
 // Return data in array format
 function convertSetToArray(set) {
 	let keys = [...set.keys()]
 
 	return keys.map(key => [key, set.get(key)])
+}
+
+function addDescription(time, what) {
+	let obj = dataPoints.get(time)
+	if (!obj) {
+		obj = {}
+		dataPoints.set(time, obj)
+	}
+
+	if (typeof obj.description === 'string') {
+		obj.description += '; ' + what
+	} else {
+		obj.description = what
+	}
 }
 
 function addAlcoholIntake(time, grams) {
@@ -119,12 +137,26 @@ function addAlcoholIntake(time, grams) {
 // 	return Math.round(n * multiplier) / multiplier
 // }
 
-function addDrink(time, cl, abv, minutes = 10) {
+export function addDrink(time, cl, abv, minutes = 10) {
+	function check(n) {
+		if (typeof n !== 'number') {
+			throw new Error('not a number: ' + n)
+		}
+		if (isNaN(n)) {
+			throw new Error('not a number: ' + n)
+		}
+	}
+
+	check(cl)
+	check(abv)
+	check(minutes)
+
 	let alcoholDensityGramsPerMl = 0.7893
 	let ml = cl * 10
 	let alcoholVolumeMl = (ml * abv) / 100
 	let alcoholGrams = alcoholVolumeMl * alcoholDensityGramsPerMl
 	let alcoholPerMinute = alcoholGrams / minutes
+	addDescription(time, `drink ${cl}cl ${abv}% in ${minutes} minutes`)
 	for (let i = 0; i < minutes; i++) {
 		addAlcoholIntake(addMinutes(time, i), alcoholPerMinute)
 	}
@@ -140,6 +172,11 @@ export function simulate() {
 	inputData.sort((a, b) => {
 		return a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0
 	})
+
+	if (!inputData[0]) {
+		// No data?
+		return []
+	}
 
 	let firstTime = inputData[0][0]
 	let lastTime = inputData[inputData.length - 1][0]
@@ -183,6 +220,8 @@ export function simulate() {
 
 	let countdown = 0
 
+	let results = []
+
 	for (let i = 0;; i++) {
 		if (addMinutes(firstTime, i) === lastTime) {
 			countdown++
@@ -207,8 +246,15 @@ export function simulate() {
 //			bac: bacRelative.toFixed(4),
 //		})
 
-		log(time + '\t' + intake.toFixed(4) + '\t' + bacRelative.toFixed(4))
+		// log(time + '\t' + intake.toFixed(4) + '\t' + bacRelative.toFixed(4))
+		let result = { time, intake, bacRelative }
+		if (input && input.description) {
+			result.description = input.description
+		}
+		results.push(result)
 	}
+
+	return results
 }
 
 // 4cl shot jaloviina - roughly 12 grams of alcohol
@@ -235,22 +281,7 @@ export function simulate() {
 // addDrink('10:10', 33.3, 4.6, 15)
 
 function doit(time, abv = 4.7) {
-	// addDrink(time, 33.3, 4.7, 10)
 	addDrink(time, 50, abv, 10)
 }
-
-doit('11:00')
-doit('11:45')
-doit('12:30')
-doit('14:00')
-doit('15:00')
-doit('15:45')
-doit('16:45')
-doit('17:30')
-doit('18:45')
-doit('19:30')
-doit('20:15')
-doit('21:15')
-doit('22:00')
 
 simulate()

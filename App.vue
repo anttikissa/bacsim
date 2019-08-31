@@ -1,21 +1,29 @@
 <template>
 	<div class="App">
 		<div class="menu">
+			<div v-if="error" class="error">
+				!
+			</div>
 			<a href="Input" @click.prevent="page = 'input'">Input</a>
 			<a href="Output" @click.prevent="page = 'output'">Output</a>
+			<div class="abv">
+				{{ abv }}
+			</div>
 		</div>
 
 		<div class="page">
 			<div v-if="page === 'input'" class="input">
-				<label for="textarea-input">Input data:</label>
-				<textarea id="textarea-input" v-model="input"
+				<label>
+					Time CL ABV
+				</label>
+				<textarea v-model="input"
 						  @input="inputChanged()"
 						  @change="inputChanged()">
 				</textarea>
 			</div>
 
 			<div v-if="page === 'output'" class="output">
-				Right page
+				<pre>{{ output }}</pre>
 			</div>
 		</div>
 	</div>
@@ -23,7 +31,13 @@
 
 <script>
 import Vue from 'vue'
-import { simulate } from './bac'
+import {
+	reset, addDrink, simulate,
+	parseTime,
+	unparseTime
+
+
+} from './bac'
 
 let log = console.log
 
@@ -32,11 +46,90 @@ export default Vue.extend({
 		return {
 			page: 'input',
 			input: [
-				'12:00 33.3 4.7',
+				'11:00 33.3 4.7',
+				'11:45 33.3 4.7',
 				'12:30 33.3 4.7',
-				'12:50 33.3 4.7', ''
+				'14:00 33.3 4.7',
+				'15:00 33.3 4.7',
+				'15:45 33.3 4.7',
+				'16:45 33.3 4.7',
+				'17:30 33.3 4.7',
+				'18:45 33.3 4.7',
+				'19:30 33.3 4.7',
+				'20:15 33.3 4.7',
+				'21:15 33.3 4.7',
+				'22:00 33.3 4.7',
 			].join('\n'),
-			content: 'Jeejee!',
+			error: false
+		}
+	},
+
+	computed: {
+		abv(...args) {
+			let now = new Date()
+
+			let hhmm = unparseTime(now.getHours(), now.getMinutes())
+
+			function normalizeTime(hhmm) {
+				let [ hh, mm ] = parseTime(hhmm)
+				while (hh >= 24) {
+					hh -= 24
+				}
+				return unparseTime(hh, mm)
+			}
+			let result
+
+			for (let simulationResult of this.simulationResults) {
+				let normalizedTime = normalizeTime(simulationResult.time)
+				if (normalizedTime === hhmm) {
+					result = simulationResult.bacRelative.toFixed(3)
+				}
+			}
+
+			return result || 0
+		},
+		simulationResults() {
+			reset()
+
+			let lines = this.input.split('\n').filter(Boolean)
+
+			try {
+				for (let line of lines) {
+					let [ time, cl, abv, minutes ] = line.split(' ')
+					if (!time || !cl || !abv) {
+						throw new Error('missing data')
+					}
+					cl = Number(cl)
+					abv = Number(abv)
+					minutes = Number(minutes)
+
+					if (minutes) {
+						addDrink(time, cl, abv, minutes)
+					} else {
+						addDrink(time, cl, abv)
+					}
+				}
+			} catch (err) {
+				log('Got err', err)
+				this.error = true
+				return []
+			}
+
+			let result = simulate()
+			this.error = false
+			return result
+		},
+
+		output() {
+			let results = this.simulationResults.map(result => {
+				let line = `${result.time}: ${result.bacRelative.toFixed(3)}`
+				if (result.description) {
+					line += ', ' + result.description
+				}
+				return line
+			})
+
+			return results.join('\n')
 		}
 	},
 
@@ -66,21 +159,20 @@ export default Vue.extend({
 	height: 100%
 
 	.menu {
-		height: 30px
+		min-height: 50px
 	}
 
 	.page {
-		height: calc(100% - 30px)
+		height: calc(100% - 50px)
 		margin: 0 5px
 	}
 
-	font-family: sans-serif
+	font-family: -apple-system, sans-serif
 }
 
 .menu {
 	text-align: center
 	border-bottom: 1px solid #888
-	min-height: 32px
 
 	a {
 		text-decoration: none
@@ -88,31 +180,69 @@ export default Vue.extend({
 		border-radius: 16px
 		color: #444
 		text-transform: uppercase
-		font-size: 14px
-		line-height: 32px
+		font-size: 20px
+		line-height: 50px
 		&:hover {
 			color: #000
 			background: #eee
 		}
 	}
+
+	.error {
+		position: absolute
+		line-height: 30px
+		left: 10px
+		top: 10px
+		height: 30px
+		width: 30px
+		color: red
+		font-weight: bold
+		background: rgba(255, 0, 0, 0.3)
+		border-radius: 15px
+	}
+
+	.abv {
+		position: absolute
+		line-height: 30px
+		right: 10px
+		top: 10px
+		height: 30px
+		/*width: 30px*/
+		color: black
+	}
 }
+
 
 .page {
 	.input {
 		height: 100%
+		label {
+			font-family: -apple-system, sans-serif
+			height: 24px
+			line-height: 24px
+		}
+		textarea {
+			font-family: -apple-system, Monaco, monospace
+			font-size: 40px
+			width: 100%
+			height: calc(100% - 10px - 24px)
+
+			outline: none;
+		}
 	}
 
-	.input label {
-		height: 24px
-		line-height: 24px
-	}
-	.input textarea {
-		font-family: monospace
-		font-size: 14px
-		width: 100%
-		height: calc(100% - 24px)
+	.output {
+		> pre {
+			/*font-family: monospace, -apple-system, Monaco, monospace*/
+			font-family: sans-serif
+			font-variant-numeric: tabular-nums
+			font-size: 16px
+			width: 100%
+			margin-top: 5px
+			height: calc(100% - 10px)
 
-		outline: none;
+			outline: none;
+		}
 	}
 }
 </style>
