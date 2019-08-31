@@ -45,10 +45,13 @@ import {
 let log = console.log
 
 export default Vue.extend({
-	data() {
-		return {
-			page: 'input',
-			input: [
+
+	mounted() {
+		let input = window.localStorage.getItem('bacInput')
+		if (typeof input === 'string') {
+			this.input = input
+		} else {
+			this.input = [
 				'11:00 33.3 4.7',
 				'11:45 33.3 4.7',
 				'12:30 33.3 4.7',
@@ -63,6 +66,27 @@ export default Vue.extend({
 				'21:15 33.3 4.7',
 				'22:00 33.3 4.7',
 			].join('\n')
+		}
+	},
+
+	data() {
+		return {
+			page: 'input',
+			input: ''
+		}
+	},
+
+	watch: {
+		simulationResults: function({ result, error, warning }) {
+			if (!error && !warning) {
+				window.localStorage.setItem('bacInput', this.input)
+			}
+		},
+		input: function(data) {
+			if (data === 'reset') {
+				window.localStorage.removeItem('bacInput')
+				window.location.reload()
+			}
 		}
 	},
 
@@ -135,7 +159,7 @@ export default Vue.extend({
 		},
 
 		output() {
-			let results = this.simulationResults.map(result => {
+			let results = this.simulationResults.result.map(result => {
 				let line = `${result.time}: ${result.bacRelative.toFixed(3)}`
 				if (result.description) {
 					line += ', ' + result.description
@@ -149,15 +173,7 @@ export default Vue.extend({
 
 	methods: {
 		inputChanged() {
-			log('!!! input changed', this.input)
-		},
-
-		clickety() {
-			simulate()
-
-			log('!!! input', this.input)
-
-			this.page = this.page === 'input' ? 'output' : 'input'
+			// log('!!! input changed to', this.input)
 		},
 	},
 })
@@ -230,7 +246,6 @@ export default Vue.extend({
 		color: black
 	}
 }
-
 
 .page {
 	.input {

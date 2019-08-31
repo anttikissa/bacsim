@@ -166,7 +166,7 @@ export function simulate() {
 	let victim = constants
 	let widmarkFactor = computeWidmark(victim)
 
-//	log('Widmark is', widmarkFactor.toFixed(4))
+	// log('Widmark is', widmarkFactor.toFixed(4))
 
 	let inputData = convertSetToArray(dataPoints)
 	inputData.sort((a, b) => {
@@ -180,6 +180,9 @@ export function simulate() {
 
 	let firstTime = inputData[0][0]
 	let lastTime = inputData[inputData.length - 1][0]
+
+	firstTime = unparseTime(...parseTime(firstTime))
+	lastTime = unparseTime(...parseTime(lastTime))
 
 	// In grams
 	let stomachAlcoholContent = 0
@@ -227,6 +230,10 @@ export function simulate() {
 			countdown++
 		}
 
+		if (i > 10000) {
+			throw new Error('simulation: too many steps ' + i)
+		}
+
 		if (countdown) {
 			if (countdown++ > 30) {
 				if (bacRelative < 0.001) {
@@ -234,6 +241,7 @@ export function simulate() {
 				}
 			}
 		}
+
 		let time = addMinutes(firstTime, i)
 		let input = dataPoints.get(time)
 		let intake = input ? input.alcoholIntake : 0
