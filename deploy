@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cd $(dirname "$0")
+export PATH=$PATH:./node_modules/.bin
+
+if [ ! -f .deploytarget ]
+then
+	echo "Create .deploytarget"
+	exit
+fi
+
+TARGET=`cat .deploytarget`
+echo "Deploying to $TARGET"
+
+rsync -avc --delete dist/ $TARGET/
+#scp -r dist $TARGET

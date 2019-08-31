@@ -3,5 +3,4 @@
 cd $(dirname "$0")
 export PATH=$PATH:./node_modules/.bin
 
-parcel index.html
-
+parcel build --public-url=/bac index.html
