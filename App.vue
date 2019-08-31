@@ -4,6 +4,9 @@
 			<div v-if="error" class="error">
 				!
 			</div>
+			<div v-if="warning" class="warning">
+				?
+			</div>
 			<a href="Input" @click.prevent="page = 'input'">Input</a>
 			<a href="Output" @click.prevent="page = 'output'">Output</a>
 			<div class="abv">
@@ -91,14 +94,19 @@ export default Vue.extend({
 		simulationResults() {
 			reset()
 
+			this.warning = false
+			this.error = false
+
 			let lines = this.input.split('\n').filter(Boolean)
 
 			try {
 				for (let line of lines) {
 					let [ time, cl, abv, minutes ] = line.split(' ')
 					if (!time || !cl || !abv) {
-						throw new Error('missing data')
+						this.warning = true
+						continue
 					}
+
 					cl = Number(cl)
 					abv = Number(abv)
 					minutes = Number(minutes)
@@ -116,7 +124,7 @@ export default Vue.extend({
 			}
 
 			let result = simulate()
-			this.error = false
+			// this.error = false
 			return result
 		},
 
@@ -188,7 +196,7 @@ export default Vue.extend({
 		}
 	}
 
-	.error {
+	.error, .warning {
 		position: absolute
 		line-height: 30px
 		left: 10px
@@ -199,6 +207,11 @@ export default Vue.extend({
 		font-weight: bold
 		background: rgba(255, 0, 0, 0.3)
 		border-radius: 15px
+	}
+
+	.warning {
+		background: rgba(255, 255, 0, 0.6)
+		color: #880
 	}
 
 	.abv {
