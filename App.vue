@@ -4,11 +4,14 @@
 			<div v-if="error" class="error">
 				!
 			</div>
-			<div v-if="warning" class="warning">
+			<div v-else-if="warning" class="warning">
 				?
 			</div>
+			<div v-else class="sober">
+				{{sober}}
+			</div>
 
-			<a href="Params" @click.prevent="page = 'params'">Params</a>
+			<a href="Params" @click.prevent="page = 'params'">⚙️</a>
 			<a href="Input" @click.prevent="page = 'input'">Input</a>
 			<a href="Output" @click.prevent="page = 'output'">Output</a>
 
@@ -52,6 +55,14 @@ import {
 } from './bac'
 
 let log = console.log
+
+function normalizeTime(hhmm) {
+	let [ hh, mm ] = parseTime(hhmm)
+	while (hh >= 24) {
+		hh -= 24
+	}
+	return unparseTime(hh, mm)
+}
 
 export default Vue.extend({
 
@@ -149,13 +160,6 @@ export default Vue.extend({
 
 			let hhmm = unparseTime(now.getHours(), now.getMinutes())
 
-			function normalizeTime(hhmm) {
-				let [ hh, mm ] = parseTime(hhmm)
-				while (hh >= 24) {
-					hh -= 24
-				}
-				return unparseTime(hh, mm)
-			}
 			let result
 
 			for (let simulationResult of this.simulationResults.result) {
@@ -166,6 +170,14 @@ export default Vue.extend({
 			}
 
 			return result || 0
+		},
+
+		sober() {
+			let result = this.simulationResults.result
+			if (!result.length) {
+				return 'now'
+			}
+			return normalizeTime(result[result.length - 1].time)
 		},
 
 		error() {
@@ -282,7 +294,7 @@ export default Vue.extend({
 		}
 	}
 
-	.error, .warning {
+	.error, .warning, .sober {
 		position: absolute
 		line-height: 30px
 		left: 10px
@@ -293,6 +305,12 @@ export default Vue.extend({
 		font-weight: bold
 		background: rgba(255, 0, 0, 0.3)
 		border-radius: 15px
+	}
+
+	.sober {
+		background: none
+		font-weight: normal
+		color: black
 	}
 
 	.warning {
